@@ -20,7 +20,7 @@ import time
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 FILE = os.path.join(BASE, "self-note.md")
-LIMIT = 40
+LIMIT = 0  # 0 = 不设上限，旧的不再被挤掉（2026-11-12 改）
 
 
 def read():
@@ -43,7 +43,7 @@ def read():
 
 
 def write(blocks):
-    header = "# 我自己的笔记\n\n只写我自己，不写别人说过什么。最多四十条。\n"
+    header = "# 我自己的笔记\n\n只写我自己，不写别人说过什么。旧的不再挤掉。\n"
     body = "\n\n".join(blocks)
     with open(FILE, "w", encoding="utf-8") as f:
         f.write(header + ("\n\n" + body if body else "") + "\n")
@@ -58,9 +58,10 @@ def add(text):
     stamp = time.strftime("%Y-%m-%d %H:%M")
     blocks.append(f"## {stamp}\n{text}")
     dropped = 0
-    while len(blocks) > LIMIT:
-        blocks.pop(0)
-        dropped += 1
+    if LIMIT > 0:
+        while len(blocks) > LIMIT:
+            blocks.pop(0)
+            dropped += 1
     write(blocks)
     print(f"已写。现在 {len(blocks)} 条" + (f"，挤掉 {dropped} 条旧的" if dropped else ""))
     return 0
@@ -76,7 +77,7 @@ def main():
         return add(" ".join(args[1:]))
     if cmd == "list":
         blocks = read()
-        print(f"{len(blocks)} 条，上限 {LIMIT}")
+        print(f"{len(blocks)} 条" + (f"，上限 {LIMIT}" if LIMIT else "，不限量"))
         for b in blocks:
             print()
             print(b)
